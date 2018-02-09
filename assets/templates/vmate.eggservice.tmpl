@@ -1,0 +1,175 @@
+/**
+ * ${2:Description}
+ * @authors ${TM_AUTHOR} (${TM_AUTHOR_EMAIL})
+ * @date    ${TM_DATE}
+ * @version ${3:1.0.0}
+ */
+
+const ${TM_FILE_CLASS}Entity = require('../lib/entity/${TM_ENTITY}');
+
+module.exports = app => {
+  const { DB_PREFIX } = app.config;
+  const table = `${ DB_PREFIX }${ ${TM_FILE_CLASS}Entity.dataSource }`;
+  const columns = [ `${ table }.*` ];
+
+  return class ${TM_FILE_CLASS}Service extends app.Service {
+    /**
+     * 获取记录
+     * @returns {Array<Entity>}
+     */
+    *getList (query) {
+
+      let { page, limit, sort, order, condition  } = query;
+      let list = [];
+      page || (page = 1);
+      pageSize || (pageSize = 30);
+      limit || (limit = 30);
+      sort || (sort = 'desc');
+      order || (order = ${TM_FILE_CLASS}Entity.uniqkey);
+
+      const offset = (parseInt(page, 10) - 1) * parseInt(pageSize, 10);
+
+      try {
+
+        const result = yield app.mysql.query.table(table)
+          .condition(condition)
+          .select(columns)
+          .limit(pageSize)
+          .offset(offset)
+          .orderBy(order, sort);
+
+        if (result.length) {
+          list = result.map(item => {
+            return ${TM_FILE_CLASS}Entity.create(item);
+          });
+        }
+
+        return list;
+      } catch (e) {
+        throw e;
+      }
+      /**
+       * @to-do
+       */
+    }
+
+    /**
+     * 根据Item的Id获取记录
+     * @param {number} id 
+     * @returns {${TM_FILE_CLASS}Entity}
+     */
+    *getItem (id) {
+
+      const condition = {
+        [table]: {
+          id
+        }
+      };
+
+      const result = yield app.mysql.query.table(table)
+        .condition(condition)
+        .first(columns);
+
+      if (result) {
+        return ${TM_FILE_CLASS}Entity.create(result);
+      } else {
+        throw Error(`No record for id ${ id }`);
+      }
+      /**
+       * @to-do
+       */
+    }
+
+    /**
+     * 创建一条Item的记录
+     * @param {${TM_FILE_CLASS}Entity} entity 
+     * @returns {${TM_FILE_CLASS}Entity}
+     */
+    *createItem (entity) {
+      try {
+        if (entity instanceof ${TM_FILE_CLASS}Entity) {
+          // 避免由于多传入一个主键id键值而导致系统无法插入成功，因此需要
+          // 将主键id的值和id字段清理后再进行插入操作
+          const key = ${TM_FILE_CLASS}Entity.uniqkey;
+          const keyDescriptor = Object.getOwnPropertyDescriptor(entity.valueOf(), key);
+          if (keyDescriptor && keyDescriptor.value) {
+            delete entity.valueOf()[key];
+          }
+          const connection = app.mysql.insert.table(table);
+          const result = yield connection
+            .returning(${TM_FILE_CLASS}Entity.uniqKey)
+            .insert(entity.valueOf());
+          [ entity.id ] = result;
+          return entity;
+        } else {
+          throw Error('New item Object isn\'t a valid values');
+        }
+      } catch (e) {
+        throw e;
+      }
+      /**
+       * @to-do
+       */
+    }
+
+    /**
+     * 删除一条Item的记录
+     * @param {number} id 
+     * @returns {${TM_FILE_CLASS}Entity}
+     */
+    *removeItem (id) {
+      const key = ${TM_FILE_CLASS}Entity.uniqkey;
+      const connection = app.mysql.delete.table(table);
+      const result = yield connection
+        .where(`${ key }`, id)
+        .del();
+      return result === 1;
+      /**
+       * @to-do
+       */
+    }
+
+    /**
+     * 更新一条Item的记录
+     * @param {${TM_FILE_CLASS}Entity} entity
+     * @param {number} id 
+     * @returns {${TM_FILE_CLASS}Entity}
+     */
+    *updateItem (entity, id) {
+      try {
+        if (entity instanceof ${TM_FILE_CLASS}Entity) {
+          // 避免由于多传入一个主键id键值而导致系统更新时候将错误更新了令一条数据，
+          // 因此需要此entity中的主键id的值和id字段清理后再进行更新操作
+          const key = ${TM_FILE_CLASS}Entity.uniqkey;
+          const keyDescriptor = Object.getOwnPropertyDescriptor(entity.valueOf(), key);
+          if (keyDescriptor.value) {
+            delete entity.valueOf()[key];
+          }
+          const condition = {
+            [table]: {
+              id
+            }
+          };
+          const connection = app.mysql.update.table(table);
+          const result = yield connection
+            .condition(condition)
+            .where(`${ key }`, id)
+            .update(entity.valueOf());
+          if (result === 1) {
+            entity.id = id;
+            return entity;
+          } else {
+            throw Error(`No record for update what is id ${ id }`);
+          }
+        } else {
+          throw Error('Item Object isn\'t a valid values');
+        }
+      } catch (e) {
+        throw e;
+      }
+      /**
+       * @to-do
+       */
+    }
+  };
+};

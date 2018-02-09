@@ -1,0 +1,15 @@
+{
+  "configitem": {
+    "prefix": "vmate config item",
+    "body": [
+      "  /**",
+      "   * @member Config#$1",
+      "   * @property {String} ${2:KEY} - ${3:description}",
+      "   */",
+      "  config.$1 = {",
+      "    $0",
+      "  };",
+      ""
+    ]
+  }
+}

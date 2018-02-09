@@ -1,0 +1,48 @@
+/**
+ * ${1:Description}
+ * @authors ${TM_AUTHOR} (${TM_AUTHOR_EMAIL})
+ * @date    ${TM_DATE}
+ * @version ${2:1.0.0}
+ */
+
+const ${TM_FILE_CLASS}Entity = require('../lib/entity/${TM_ENTITY}');
+const Op = require('../lib/querydb/op');
+
+module.exports = app => {
+  const { DB_PREFIX } = app.config;
+  const table = `\${ DB_PREFIX }\${ ${TM_FILE_CLASS}Entity.dataSource }`;
+
+  return class ${TM_FILE_CLASS}Controller extends app.Controller {
+    /**
+     * 获取记录
+     * @param {*} ctx
+     */
+    ${TM_STYLE_FN} ${3:index} (ctx) {
+      const service = this.service.${TM_ENTITY};
+      const { query, response } = ctx;
+
+      query.condition = {
+        [Op.or]: {
+          [table]: {
+            ${4:word}_LIKE: ${4}
+          }
+        }
+      };
+
+      try {
+        const record = yield service.getList(query);
+
+        response.success = record.map(item => {
+          return item.valueOf();
+        });
+
+      } catch (e) {
+        response.fail = e.message;
+      }
+      \${5}
+      /**
+       * @to-do
+       */
+    }
+  };
+};

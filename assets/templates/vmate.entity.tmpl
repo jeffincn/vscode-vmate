@@ -1,0 +1,29 @@
+/**
+ * ${2:Description}
+ * @authors ${TM_AUTHOR} (${TM_AUTHOR_EMAIL})
+ * @date    ${TM_DATE}
+ * @version ${3:1.0.0}
+ */
+
+const entity = require('../entity');
+
+const { Entity } = entity;
+
+module.exports = class ${TM_FILE_CLASS}Entity extends Entity {
+  static get dataType () {
+    return 'mysql';
+  }
+  static get dataSource () {
+    return '${1}';
+  }
+  static create (props) {
+    return new ${TM_FILE_CLASS}Entity(props);
+  }
+  get country () {
+    return this.props.country;
+  }
+  set country (country) {
+    this.props.country = country;
+  }
+  // ... other property 
+};
