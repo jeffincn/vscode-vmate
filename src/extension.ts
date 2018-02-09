@@ -16,13 +16,6 @@ export async function activate(context: ExtensionContext) {
 
     if (!cwd) return;
 
-    const framework = await utils.getFramework(cwd);
-
-    if (framework) {
-        // load config sidebar only if at egg project
-        await context.workspaceState.update('vmate.framework', framework);
-        await commands.executeCommand("setContext", "isEgg", true);
-    }
 
     await VmateSnippet.init(context);
     // EggTest.init(context);
