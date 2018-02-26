@@ -50,7 +50,7 @@ export class FileCache extends vscode.Disposable {
     const files = await vscode.workspace.findFiles(include, exclude);
     const result = [];
     for (const uri of files) {
-      const content = await this.readFile(uri);
+      const content = await this.readFile(uri, true);
       result.push({ uri, content });
     }
     return result;

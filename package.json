@@ -2,7 +2,7 @@
     "name": "vmate",
     "displayName": "vmate",
     "description": "vscode extension for vmate",
-    "version": "0.2.0",
+    "version": "0.4.0",
     "publisher": "jeffincn",
     "homepage": "https://github.com/jeffincn/vscode-vmate",
     "repository": {
@@ -59,6 +59,14 @@
             {
                 "language": "javascript",
                 "path": "./snippets/vmate.json"
+            },
+            {
+                "language": "javascript",
+                "path": "./snippets/querydb.json"
+            },
+            {
+                "language": "javascript",
+                "path": "./snippets/application.json"
             }
         ]
     },
@@ -72,9 +80,11 @@
     },
     "dependencies": {
         "common-tags": "^1.4.0",
+        "egg-ast-utils": "^1.0.0",
         "egg-utils": "^2.3.0",
         "globby": "^6.1.0",
         "is-type-of": "^1.2.0",
+        "jscodeshift": "^0.4.1",
         "lodash.get": "^4.4.2",
         "moment": "^2.20.1",
         "mz": "^2.6.0",
@@ -89,5 +99,10 @@
         "vscode": "^1.0.0",
         "vsce": "^1.31.1"
     },
-    "license": "MIT"
+    "license": "MIT",
+    "__metadata": {
+        "id": "c1fdc6c7-13bd-4847-a4e3-c52cbac60c45",
+        "publisherDisplayName": "Jeff Kwok",
+        "publisherId": "7e6e55c8-353c-48cf-a53c-394d327290f3"
+    }
 }

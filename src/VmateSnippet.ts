@@ -34,6 +34,16 @@ export async function init(context: ExtensionContext) {
     entity: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.entity.tmpl')))
   }
 
+  const shortSnippets = {
+    query: `app.mysql.query`,
+    update: `app.mysql.update`,
+    del: `app.mysql.del`,
+    delete: `app.mysql.delete`,
+    select: `app.mysql.select`,
+    create: `app.mysql.create`,
+    insert: `app.mysql.insert`
+  }
+
   // register snippet
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider([ 'javascript' ], {
     provideCompletionItems() {
@@ -49,6 +59,11 @@ export async function init(context: ExtensionContext) {
       return item;
     }
   }));
+  context.subscriptions.push(vscode.languages.registerCompletionItemProvider(['javascript'], {
+    provideCompletionItems() {
+      return Object.keys(shortSnippets).map(key => new SnippetCompletionItem(`app.${key}`, stripIndent`${shortSnippets[key]};`));
+    }
+  }))
 }
 
 export class SnippetCompletionItem extends CompletionItem {
@@ -57,7 +72,6 @@ export class SnippetCompletionItem extends CompletionItem {
     this.insertText = new SnippetString(snippet, locals);
   }
 }
-
 export class SnippetString extends vscode.SnippetString {
   public value;
   constructor(value: string, locals: object = {}) {

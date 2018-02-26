@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import * as utils from './utils';
 import * as VmateSnippet from './VmateSnippet';
+import * as ClassSnippet from './lib/ClassParser';
 import { ExtensionContext, commands, workspace, window, Uri } from 'vscode';
 import * as globby from 'globby';
 
@@ -18,6 +19,7 @@ export async function activate(context: ExtensionContext) {
 
 
     await VmateSnippet.init(context);
+    await ClassSnippet.init(context);
     // EggTest.init(context);
 
     commands.registerCommand('extension.openFile', async filePath => {
@@ -29,6 +31,7 @@ export async function activate(context: ExtensionContext) {
             await commands.executeCommand('workbench.action.focusActiveEditorGroup');
         }
     });
+
 }
 
 // this method is called when your extension is deactivated

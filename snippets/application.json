@@ -1,0 +1,12 @@
+{
+  "supercache":{
+    "prefix": "supercache",
+    "body": "app.supercache.${1|set(${key}${value}),get(${key}),use(${file}).put(${key}${value}),use(${file}).increase(),use(${file}).decrease()|}",
+    "description": "系统应用服务 supercache "
+  },
+  "response":{
+    "prefix": "response",
+    "body": "${1|ctx.response,response|}.${2|success,fail|}=${3|{data:data},message|};",
+    "description": "系统应用服务 response "
+  }
+}
