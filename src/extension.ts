@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as utils from './utils';
 import * as VmateSnippet from './VmateSnippet';
 import * as ClassSnippet from './lib/ClassParser';
-import { ExtensionContext, commands, workspace, window, Uri } from 'vscode';
+import { ExtensionContext, commands, workspace, window, Uri , languages, DocumentSelector} from 'vscode';
 import * as globby from 'globby';
 
 // this method is called when your extension is activated
@@ -17,9 +17,11 @@ export async function activate(context: ExtensionContext) {
 
     if (!cwd) return;
 
-
     await VmateSnippet.init(context);
-    await ClassSnippet.init(context);
+    await ClassSnippet.init(context, `**/app/service/**`, 'service');
+    await ClassSnippet.init(context, `**/app/controller/**`, 'controller');
+    await ClassSnippet.init(context, `**/app/lib/**`, 'lib')
+
     // EggTest.init(context);
 
     commands.registerCommand('extension.openFile', async filePath => {

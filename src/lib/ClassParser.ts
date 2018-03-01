@@ -6,8 +6,10 @@ import * as ast from 'egg-ast-utils';
 
 import { ExtensionContext, workspace, Uri, WorkspaceFolder, GlobPattern } from 'vscode';
 import { SnippetCompletionItem } from '../VmateSnippet';
+import { build } from "./SnippetBuild";
 
-export async function init(context: ExtensionContext) {
+export async function init(context: ExtensionContext, pattern:GlobPattern, domain:String) {
+  const completionItemList:Map<string, Array<vscode.Disposable>>= new Map();
   let serverRoot:Uri = workspace.getConfiguration('vmate').get('serverRoot')
   if (!serverRoot) {
     const folders = workspace.workspaceFolders;
@@ -19,62 +21,65 @@ export async function init(context: ExtensionContext) {
   };
 
   if (!serverRoot) return;
-
-  const serviceFilesPath:GlobPattern = `**/app/service/*.js`;
+  console.time("Class Service Loader");
+  const serviceFilesPath:GlobPattern = pattern;
   const serviceFilesCache:FileCache = new FileCache(serviceFilesPath, {
     parserFn: ast.parseClass
   });
+  const fileCache = serviceFilesCache;
+  serviceFilesCache.watching(
+    async function (uri) {
+      const matcher = uri.toString().match(regex);
+      if (matcher.length) {
+        let key = matcher[2]
+        if (key.indexOf('/')>-1) {
+          key = key.replace('/', '.');
+        }
+        const disaposeList:Array<vscode.Disposable> = completionItemList.get(key);
+        if (disaposeList) {
+          disaposeList.forEach(value => value.dispose());
+        }
+        const content = await fileCache.readFile(uri, true);
+        if (content) {
+          const items = content.children;
+          completionItemList.set(key, build({ key, items }, domain, context));
+        }
+      }
+    }
+  );
+
+
   context.subscriptions.push(serviceFilesCache);
 
-  const files = await serviceFilesCache.readFiles(serviceFilesPath, 'node_modules');
+  const files = await serviceFilesCache.readFiles(serviceFilesPath, '**/node_modules/**');
 
   const result = [];
 
+  const regex = new RegExp(`(app\/${domain}\/)(.*)\.js`);
   for (const { content, uri } of files) {
-    const key = uri.toString().match(/app\/service\/(\w*)\.js/)[1];
-    const items = content.children;
-    result.push({ key, items });
-  }
-
-  const fileCaches = result;
-  const snippets = [];
-  fileCaches.map(item => {
-
-    const key = item.key;
-    const resources = item.items;
-    for (const prop in resources) {
-      const {value, node} = resources[prop][0];
-      if (node.type === 'MethodDefinition') {
-        const snippetString = [];
-        if (value.async) {
-          snippetString.push('async ');
-        } else if (value.generator) {
-          snippetString.push('yield ');
-        }
-        let params = [];
-        if (value.params && value.params.length) {
-          let ii = 2;
-          params = value.params.map((param) => {
-            if (param.type === 'Identifier')
-              return `\${${ii}:${param.name}}`;
-          })
-        }
-        snippetString.push(`\${1|this.service.${key},app.service.${key},service.${key},service,${key}|}.${prop}(`)
-        snippetString.push(params.join(', '))
-        snippetString.push(`);`)
-        snippets.push({ key, prop, snippet: snippetString.join('') });
+    const matcher = uri.toString().match(regex);
+    if (matcher.length && content ) {
+      let key = matcher[2]
+      if (key.indexOf('/')>-1) {
+        key = key.replace('/', '.');
       }
-
+      const items = content.children;
+      result.push({ key, items });
     }
+  }
+  result.map(item => {
+    const { key } = item;
+    const completionItem = build(item, domain, context);
+    completionItemList.set(key, completionItem );
   });
 
-
-  //register snippet
-  context.subscriptions.push(vscode.languages.registerCompletionItemProvider(['javascript'], {
-    provideCompletionItems() {
-      return snippets.map(item => new SnippetCompletionItem(`service.${item.key}.${item.prop}`, item.snippet));
-    }
-  }))
+  console.timeEnd("Class Service Loader");
+//   //register snippet
+//   context.subscriptions.push(vscode.languages.registerCompletionItemProvider(['javascript'], {
+//     provideCompletionItems() {
+//       return snippets.map(item => new SnippetCompletionItem(`${domain}.${item.key}.${item.prop}`, item.snippet));
+//     }
+//   }))
 
 }
 

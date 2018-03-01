@@ -7,7 +7,7 @@ import { fs } from 'mz';
 export class FileCache extends vscode.Disposable {
   private watcher: vscode.FileSystemWatcher;
   private cache: Map<vscode.Uri, string> = new Map();
-
+  private cb: Function;
   constructor(
     readonly pattern: vscode.GlobPattern,
     readonly options?: {
@@ -28,13 +28,32 @@ export class FileCache extends vscode.Disposable {
     }
 
     this.watcher = vscode.workspace.createFileSystemWatcher(pattern, true);
-    this.watcher.onDidDelete(uri => this.cache.delete(uri));
+    this.watcher.onDidDelete(async uri => {
+      this.cache.delete(uri)
+      await this.cb(uri);
+    });
+    this.watcher.onDidCreate(async uri => {
+      if (this.cache.has(uri)) {
+        const content = await this.loadFile(uri);
+        this.cache.set(uri, content);
+      }
+      await this.cb(uri);
+    });
     this.watcher.onDidChange(async uri => {
       if (this.cache.has(uri)) {
         const content = await this.loadFile(uri);
         this.cache.set(uri, content);
       }
+      await this.cb(uri);
     });
+  }
+
+  get cacheMap() {
+    return this.cache;
+  }
+
+  watching(cb) {
+    this.cb = cb;
   }
 
   async readFile(uri: vscode.Uri, noCache?: boolean): Promise<any> {

@@ -2,7 +2,7 @@
     "name": "vmate",
     "displayName": "vmate",
     "description": "vscode extension for vmate",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "publisher": "jeffincn",
     "homepage": "https://github.com/jeffincn/vscode-vmate",
     "repository": {
@@ -40,6 +40,13 @@
                         "null"
                     ],
                     "description": "Additional author email"
+                },
+                "vmate.serverRoot":{
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Locate your egg project root path"
                 },
                 "vmate.snippet.fnStyle": {
                     "type": [

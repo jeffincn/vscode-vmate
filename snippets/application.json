@@ -1,12 +1,32 @@
 {
-  "supercache":{
-    "prefix": "supercache",
-    "body": "app.supercache.${1|set(${key}${value}),get(${key}),use(${file}).put(${key}${value}),use(${file}).increase(),use(${file}).decrease()|}",
+  "supercache.set": {
+    "prefix": "supercache.set",
+    "body": "app.supercache.set(${1:key}, ${2:value}, ${3:ttl}, ${4|false,true|})$0",
+    "description": "系统应用服务 supercache "
+  },
+  "supercache.get":{
+    "prefix": "supercache.get",
+    "body": "app.supercache.get(${1:key}, ${2|false,true|})$0",
+    "description": "系统应用服务 supercache "
+  },
+  "supercache.put": {
+    "prefix": "supercache.put",
+    "body": "app.supercache.use(${1:file}).put(${1:key}, ${2:value})$0",
+    "description": "系统应用服务 supercache "
+  },
+  "supercache.increase": {
+    "prefix": "supercache.increase",
+    "body": "app.supercache.use(${1:file}).increase(${2:key})$0",
+    "description": "系统应用服务 supercache "
+  },
+  "supercache.decrease": {
+    "prefix": "supercache.decrease",
+    "body": "app.supercache.use(${1:file}).decrease(${2:key})$0",
     "description": "系统应用服务 supercache "
   },
   "response":{
     "prefix": "response",
-    "body": "${1|ctx.response,response|}.${2|success,fail|}=${3|{data:data},message|};",
+    "body": "${1|ctx.response,response|}.${2|success,fail|} = ${3|{data:data},message|};",
     "description": "系统应用服务 response "
   }
 }

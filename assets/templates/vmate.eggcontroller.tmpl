@@ -6,7 +6,15 @@
  */
 
 const ${TM_FILE_CLASS}Entity = require('../lib/entity/${TM_ENTITY}');
-const Op = require('../lib/querydb/op');
+
+/**
+  将以下的配置添加到 /backend/route.js 中
+  app.delete('/api/v1/${TM_ENTITY}/:id', jwt, '${TM_ENTITY}.delete'); // 移除记录
+  app.post('/api/v1/${TM_ENTITY}', jwt, '${TM_ENTITY}.add'); // 添加记录
+  app.put('/api/v1/${TM_ENTITY}/:id', jwt, '${TM_ENTITY}.update'); // 修改记录；
+  app.get('/api/v1/${TM_ENTITY}', jwt, '${TM_ENTITY}.index'); // 获取记录信息；
+  app.get('/api/v1/${TM_ENTITY}/:id', jwt, '${TM_ENTITY}.get'); // 获取单条记录信息；
+  */
 
 module.exports = app => {
   const { DB_PREFIX } = app.config;
@@ -17,15 +25,13 @@ module.exports = app => {
      * 获取记录
      * @param {*} ctx
      */
-    ${TM_STYLE_FN} ${3:index} (ctx) {
+    * ${3:index} (ctx) {
       const service = this.service.${TM_ENTITY};
       const { query, response } = ctx;
 
       query.condition = {
-        [Op.or]: {
-          [table]: {
-            ${4:word}_LIKE: ${4}
-          }
+        [table]: {
+          ${4:word}_LIKE: ${4}
         }
       };
 
@@ -39,7 +45,7 @@ module.exports = app => {
       } catch (e) {
         response.fail = e.message;
       }
-      \${5}
+      ${5}
       /**
        * @to-do
        */
