@@ -72,20 +72,23 @@ export function build(item: {key:String,items:Object}, domain:String, context:Ex
       if (commentBlocks.length) {
         comments = commentBlocks.map(comment => comment.value.replace(/\*/g, ""))
       }
-      console.info(`Found: ${domain}.${key}.${prop}`);
-      console.info()
-      disposableList.push(vscode.languages.registerCompletionItemProvider(
-        'javascript',
-        {
-          provideCompletionItems() {
-              return [new SnippetCompletionItem(`${domain}.${key}.${prop}`, snippetString.join(''))];
+      if (!(/\@(private)/ig).test(comments.join(''))) {
+        console.info(`Found: ${domain}.${key}.${prop}`);
+        console.info()
+        disposableList.push(vscode.languages.registerCompletionItemProvider(
+          'javascript',
+          {
+            provideCompletionItems() {
+                return [new SnippetCompletionItem(`${domain}.${key}.${prop}`, snippetString.join(''))];
+            },
+            resolveCompletionItem() {
+              return new ResolveCompletionItem(`${domain}.${key}.${prop}`, snippetString.join(''), `${plainPrefixMethod}${prop}( ${plainParams.join(', ')} )`, comments.join("\n"), )
+            },
           },
-          resolveCompletionItem() {
-            return new ResolveCompletionItem(`${domain}.${key}.${prop}`, snippetString.join(''), `${plainPrefixMethod}${prop}( ${plainParams.join(', ')} )`, comments.join("\n"), )
-          },
-        },
-        '.')
-      );
+          '.')
+        );
+
+      }
     }
   }
   return disposableList;
@@ -113,6 +116,7 @@ export class ResolveCompletionItem extends CompletionItem {
     super(label, CompletionItemKind.Snippet);
     const markdownString = new MarkdownString(`${detail}\n\n **${method}**\n\n`);
     this.documentation = markdownString;
+    this.detail = 'Object';
     this.insertText = new SnippetString(snippet, locals)
   }
 }

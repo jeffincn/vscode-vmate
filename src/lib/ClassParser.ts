@@ -1,14 +1,15 @@
-import * as jscodeshift from 'jscodeshift';
 import * as vscode from 'vscode';
 import { stripIndent } from 'common-tags';
 import { FileCache } from '../FileUtils';
 import * as ast from 'egg-ast-utils';
+import { StatusBarView } from '../views/view';
 
 import { ExtensionContext, workspace, Uri, WorkspaceFolder, GlobPattern } from 'vscode';
 import { SnippetCompletionItem } from '../VmateSnippet';
 import { build } from "./SnippetBuild";
 
 export async function init(context: ExtensionContext, pattern:GlobPattern, domain:String) {
+    const statusBarView: StatusBarView = StatusBarView.getInstance();
   const completionItemList:Map<string, Array<vscode.Disposable>>= new Map();
   let serverRoot:Uri = workspace.getConfiguration('vmate').get('serverRoot')
   if (!serverRoot) {
@@ -29,6 +30,7 @@ export async function init(context: ExtensionContext, pattern:GlobPattern, domai
   const fileCache = serviceFilesCache;
   serviceFilesCache.watching(
     async function (uri) {
+      statusBarView.setRunning(`Updating ${domain} file changed...` )
       const matcher = uri.toString().match(regex);
       if (matcher.length) {
         let key = matcher[2]
@@ -44,6 +46,7 @@ export async function init(context: ExtensionContext, pattern:GlobPattern, domai
           const items = content.children;
           completionItemList.set(key, build({ key, items }, domain, context));
         }
+        statusBarView.setCompleted(`Re-Indexed ${domain}/${key} info` )
       }
     }
   );
@@ -74,6 +77,7 @@ export async function init(context: ExtensionContext, pattern:GlobPattern, domai
   });
 
   console.timeEnd("Class Service Loader");
+
 //   //register snippet
 //   context.subscriptions.push(vscode.languages.registerCompletionItemProvider(['javascript'], {
 //     provideCompletionItems() {
