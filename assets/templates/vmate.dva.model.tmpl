@@ -1,0 +1,130 @@
+/**
+ * ${2:Description}
+ * @authors guo jianfeng (gjf89268@alibaba-inc.com)
+ * @date    ${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE} ${CURRENT_HOUR}:${CURRENT_MINUTE}:${CURRENT_SECOND}
+ * @version ${3:1.0.0}
+ */
+
+/*****
+ * 请将此处的model在 route.js 的相关模块路由下 使用
+ * registerModel 进行注册。
+ * ${TM_FILENAME}
+ * ${TM_FILENAME/(.*)\\..+$/${1}/}
+ * registerModel(app, require('./${TM_FILE_PATH}'));
+ */
+
+import * as ${1}Service from 'service/${1}';
+import { urlParse } from '../../util';
+import { message } from 'antd';
+import _ from 'lodash';
+
+
+export default {
+  namespace: '${1}',
+  state: {
+  	list: [],
+  	total: 0,
+  	order: 'descend'
+  },
+  subscriptions: {
+  	setup ({ dispatch, history }) {
+      history.listen(routeObj => {
+        const { pathname } = routeObj;
+        const { query } = urlParse('/${1}', routeObj);
+        if (pathname === '/${1}' && /${1}/.test(query.type)) {
+          if (query) {
+            dispatch({
+              type: 'getList',
+              payload: query,
+              loading: true
+            });
+          }
+        }
+      });
+    }
+	},
+	effects: {
+    *getList ({ payload }, { call, put }) {
+    	const result = yield call(${1}Service.get${4}List, {
+        payload
+      });
+      const { data } = result;
+      if (data.status === 1) {
+        const { list, total } = data.data;
+        yield put({
+          type: 'saveList',
+          payload: {
+            list,
+            total
+          }
+        });
+      } else {
+        message.error(data.message);
+      }
+  	},
+    // 更新操作，payload中需要带上id；
+    *updateItem ({
+      payload
+    }, { call, put }) {
+      const { id } = payload;
+      if (_.isUndefined(id)) {
+        message.error('Require "id" field in data');
+      }
+      const result = yield call(${1}Service.putItem, { payload });
+      const { data } = result;
+      if (data.status === 1) {
+        message.success('Success');
+        yield put({ type: 'sendMessage', payload });
+      }
+    },
+    // 新增操作
+    *addItem ({
+      payload
+    }, { call, put }) {
+      const result = yield call(${1}Service.postItem, { payload });
+      const { data } = result;
+      if (data.status === 1) {
+        message.success('Success');
+        yield put({ type: 'sendMessage', payload });
+      }
+    },
+    // 删除操作，payload中需要带上id；
+    *deleteItem ({
+      payload
+    }, { call, put }) {
+      const { id } = payload;
+      if (_.isUndefined(id)) {
+        message.error('Require "id" field in data');
+      }
+      const result = yield call(${1}Service.deleteItem, { payload });
+      const { data } = result;
+      if (data.status === 1) {
+        message.success('Success');
+        yield put({ type: 'sendMessage', payload });
+      }
+    }
+  },
+  reducers: {
+    saveList (state, { payload }) {
+      return {
+        ...state,
+        ...payload
+      };
+    },
+    sendMessage (state, { payload }) {
+      let { list } = state;
+      list = list.filter(item => {
+        return item.id !== payload.id;
+      });
+      const total = list.length;
+
+      return {
+        ...state,
+        ...{
+          list,
+          total
+        }
+      };
+    }
+  }
+}

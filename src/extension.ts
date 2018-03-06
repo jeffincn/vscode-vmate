@@ -11,22 +11,20 @@ import { StatusBarView } from './views/view';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
-    console.log('vscode-vmate is activate!');
     const statusBarView: StatusBarView = StatusBarView.getInstance();
+    statusBarView.startProgress();
+    statusBarView.setRunning('Vmate Extensiton Initialing ...');
     const cwd = workspace.rootPath;
     const config = workspace.getConfiguration('vmate');
 
     if (!cwd) return;
-
     await VmateSnippet.init(context);
-    statusBarView.startProgress();
-    statusBarView.setRunning('Running....');
+    statusBarView.setRunning('Seeking: Service');
     await ClassSnippet.init(context, `**/app/service/**`, 'service');
-    statusBarView.setRunning('Service scan completed.');
+    statusBarView.setRunning('Seeking: Controller');
     await ClassSnippet.init(context, `**/app/controller/**`, 'controller');
-    statusBarView.setRunning('Controller scan completed.');
     await ClassSnippet.init(context, `**/app/lib/**`, 'lib')
-    statusBarView.setCompleted('Scan is Finished');
+    statusBarView.setCompleted('Initial Completed');
     // EggTest.init(context);
 
     commands.registerCommand('extension.openFile', async filePath => {

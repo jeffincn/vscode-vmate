@@ -1,0 +1,67 @@
+/**
+ * ${2:Description}
+ * @authors guo jianfeng (gjf89268@alibaba-inc.com)
+ * @date    ${date}
+ * @version ${3:1.0.0}
+ */
+
+
+import { request, json2QueryString } from '../util';
+const URI = '/api/v1/${1:Any}';
+
+/**
+ * 获取列表
+ * @param {*} params
+ */
+export function getList (params) {
+  const { payload } = params;
+	let queryString = {};
+  let key = 0;
+  for (key in payload) {
+    if ({}.hasOwnProperty.call(payload, key)) {
+      queryString[key] = payload[key];
+    }
+  }
+  const url = URI + json2QueryString(queryString);
+	return request(url, {
+    method: 'GET'
+  });
+}
+/**
+ * 修改记录
+ * @param {*} params
+ */
+export function putItem (params) {
+  const { payload } = params;
+  const { id } = payload;
+  const url = URI + '/' + id;
+  return request(url, {
+    method: 'PUT',
+    body: payload
+  });
+}
+/**
+ * 新增记录
+ * @param {*} params
+ */
+export function postItem (params) {
+  const { payload } = params;
+  const url = URI;
+  return request(url, {
+    method: 'POST',
+    body: payload
+  });
+}
+
+/**
+ * 删除记录
+ * @param {*} params
+ */
+export function deleteItem (params) {
+  const { payload } = params;
+  const { id } = payload;
+  const url = URI + '/' + id;
+  return request(url, {
+    method: 'DELETE'
+  });
+}

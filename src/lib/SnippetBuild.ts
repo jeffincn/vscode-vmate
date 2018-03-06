@@ -12,13 +12,10 @@ export function build(item: {key:String,items:Object}, domain:String, context:Ex
     if (node.type === 'MethodDefinition') {
       const snippetString = [];
       let plainPrefixMethod = ' ';
-      if (value.async) {
+      if (isAsyncReturn(node)) {
         snippetString.push('async ');
         plainPrefixMethod = '`async` ';
-      } else if (value.generator) {
-        snippetString.push('yield ');
-        plainPrefixMethod = '`yield` ';
-      } else if (isPromiseReturn(value.body)) {
+      } else if (isPromiseReturn(node)) {
         snippetString.push('yield ');
         plainPrefixMethod = '`yield` ';
       }
@@ -94,8 +91,31 @@ export function build(item: {key:String,items:Object}, domain:String, context:Ex
   return disposableList;
 }
 
-export function  isPromiseReturn (methodBody) {
-  const { body } = methodBody;
+export function isAsyncReturn(node) {
+  const { comments, value } = node;
+  const { body } = value.body;
+
+  if (value.async) return true;
+  if (comments) {
+     const commentInfo= comments.map(comment => comment.value.replace(/\*/g, ""))
+    if ((/\@(async)/ig).test(commentInfo.join(''))) {
+      return true;
+     }
+  }
+  return false;
+}
+
+export function  isPromiseReturn (node) {
+  const { comments, value } = node;
+  const { body } = value.body;
+
+  if (value.generator) return true;
+  if (comments) {
+     const commentInfo= comments.map(comment => comment.value.replace(/\*/g, ""))
+    if ((/\@(yield)/ig).test(commentInfo.join(''))) {
+      return true;
+     }
+  }
   if (body.length > 0) {
     const returnStatements = body.filter(node => {
       return (node.type === 'ReturnStatement')

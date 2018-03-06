@@ -1,0 +1,68 @@
+/**
+ * ${2:Description}
+ * @authors guo jianfeng (gjf89268@alibaba-inc.com)
+ * @date    ${date}
+ * @version ${3:1.0.0}
+ */
+import React from 'react';
+import { connect } from 'dva';
+import 'antd/dist/antd.css';
+import enUS from 'antd/lib/locale-provider/en_US';
+import styles from './${componentName}.less';
+import { routerRedux } from 'dva/router';
+import { LocaleProvider, Table, Pagination } from 'antd';
+
+function ${ComponentName} (props) {
+  const {dataSource, dispatch, routeObj, loading, location} = props;
+  const {list, total} = dataSource;
+
+  const avaliableColumns = [];
+  const urlQueryParams = location.query;
+
+   // 更新页面
+  const pageChange = page => {
+    dispatch(
+      routerRedux.push({
+        pathname: location.pathname,
+        query: {
+          ...urlQueryParams,
+          page,
+        },
+      })
+    );
+  };
+
+  return (
+    <LocaleProvider locale={enUS}>
+      <div>
+        <div className={styles['base-header']} />
+        <Table
+          className={styles['data-source-list']}
+          dataSource={list}
+          columns={avaliableColumns}
+          rowKey={'id'}
+          pagination={false}
+          loading={loading}/>
+        <Pagination
+          showQuickJumper
+          current={+urlQueryParams.page}
+          pageSize={+urlQueryParams.limit}
+          total={total}
+          onChange={pageChange.bind(null)}
+          showTotal={function (total) {
+            return `Totla Items：${ total }`;
+          }}
+        />
+      </div>
+    </LocaleProvider>
+  );
+}
+
+function mapStateToProps (state) {
+  return {
+    loading: state.loading.effects['${componentName}/getList']|| state.loading.effects['${componentName}/updateItem'] || state.loading.effects['${componentName}/deleteItem'] || state.loading.effects['${componentName}/addItem'],
+    dataSource: state.${componentName}
+  };
+}
+
+export default connect(mapStateToProps)(${ComponentName});

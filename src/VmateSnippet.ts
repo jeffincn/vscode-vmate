@@ -31,7 +31,10 @@ export async function init(context: ExtensionContext) {
   const snippets = {
     controller: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.eggcontroller.tmpl'))),
     service: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.eggservice.tmpl'))),
-    entity: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.entity.tmpl')))
+    entity: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.entity.tmpl'))),
+    dvamodel: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.dva.model.tmpl'))),
+    dvaservice: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.dva.service.tmpl'))),
+    dvaview: await fileCache.readFile(Uri.file(path.join(__dirname, '../../assets/templates/vmate.dva.view.tmpl'))),
   }
 
   const shortSnippets = {
@@ -75,10 +78,12 @@ export class SnippetCompletionItem extends CompletionItem {
 export class SnippetString extends vscode.SnippetString {
   public value;
   constructor(value: string, locals: object = {}) {
+    const cwd = vscode.workspace.rootPath;
     // preset variable
     locals = Object.assign({}, {
       TM_FILE_CLASS: 'TM_FILENAME_BASE/(.*)/${1:/capitalize}/',
-      TM_ENTITY: 'TM_FILENAME_BASE/(.*)/${1:/downcase}/'
+      TM_ENTITY: 'TM_FILENAME_BASE/(.*)/${1:/downcase}/',
+      TM_FILE_PATH: `TM_FILEPATH/(${cwd}\/PC\/src\/)//`
     }, locals);
 
     // replace
