@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { SnippetCompletionItem, SnippetString } from '../VmateSnippet';
-import { ExtensionContext, workspace, Uri, WorkspaceFolder, GlobPattern, CompletionItemProvider, CompletionItem, CompletionItemKind, MarkdownString } from 'vscode';
+import { ProvideCompletionItem, SnippetString } from '../VmateSnippet';
+import { ExtensionContext, workspace, Uri, WorkspaceFolder, GlobPattern, CompletionItemProvider, CompletionItem, CompletionItemKind, MarkdownString, TextDocument, Position, CancellationToken, CompletionContext } from 'vscode';
 
 export function build(item: {key:String,items:Object}, domain:String, context:ExtensionContext): Array<vscode.Disposable> {
   const key = item.key;
@@ -9,59 +9,65 @@ export function build(item: {key:String,items:Object}, domain:String, context:Ex
   const disposableList = [];
   for (const prop in resources) {
     const {value, node} = resources[prop][0];
-    if (node.type === 'MethodDefinition') {
+    if (node.type === 'MethodDefinition' ) {
       const snippetString = [];
       let plainPrefixMethod = ' ';
-      if (isAsyncReturn(node)) {
+      if (isAsyncReturn(node, domain)) {
         snippetString.push('async ');
         plainPrefixMethod = '`async` ';
-      } else if (isPromiseReturn(node)) {
+      } else if (isPromiseReturn(node, domain)) {
         snippetString.push('yield ');
         plainPrefixMethod = '`yield` ';
       }
       let params = [];
       let plainParams = [];
       let ii = 2;
-      snippetString.push(`\${1|this.${domain}.${key}.${prop},app.${domain}.${key}.${prop},ctx.${domain}.${key}.${prop},${domain}.${key}.${prop},${key}.${prop},${domain}.${prop},${prop}|}(`)
-      const propParams = [];
-      const plainPropParams =[];
-      if (value.params && value.params.length) {
-        value.params.map((param) => {
-          ii++;
-          if (param.type === 'Identifier') {
-            params.push(`\${${ii}:${param.name}}`);
-            plainParams.push(`${param.name}`);
-          } else if (param.type === 'ObjectPattern') {
-            propParams.push('{ ');
-            plainPropParams.push('{ ');
-            const { properties } = param;
-            const objectParams = [];
-            const plainObjectParams = [];
-            properties.map(prop => {
-              ii++;
-              const { key } = prop;
-              objectParams.push(`\${${ii}:${key.name}}`)
-              plainObjectParams.push(`${key.name}`)
-            })
-            propParams.push(objectParams.join(', '));
-            plainPropParams.push(plainObjectParams.join(', '));
-            propParams.push(' }');
-            plainPropParams.push(' }');
-            params.push(propParams.join(''));
-            plainParams.push(plainPropParams.join(''));
-          } else if (param.type === 'AssignmentPattern') {
-            if (param.left && param.left.type === 'Identifier') {
-              params.push(`\${${ii}:${param.left.name}}`);
-              plainParams.push(`${param.left.name}?`);
-            }
-         }
-          return param;
-        })
-        snippetString.push(params.join(', '))
 
+      if (domain === 'controller') {
+        snippetString.push(`\${1|app.${domain}.${key}.${prop},${domain}.${key}.${prop},${key}.${prop}|}`)
+      } else {
+        snippetString.push(`\${1|this.${domain}.${key}.${prop},app.${domain}.${key}.${prop},ctx.${domain}.${key}.${prop},${domain}.${key}.${prop},${key}.${prop},${domain}.${prop},${prop}|}(`)
+        const propParams = [];
+        const plainPropParams =[];
+        if (value.params && value.params.length) {
+          value.params.map((param) => {
+            ii++;
+            if (param.type === 'Identifier') {
+              params.push(`\${${ii}:${param.name}}`);
+              plainParams.push(`${param.name}`);
+            } else if (param.type === 'ObjectPattern') {
+              propParams.push('{ ');
+              plainPropParams.push('{ ');
+              const { properties } = param;
+              const objectParams = [];
+              const plainObjectParams = [];
+              properties.map(prop => {
+                ii++;
+                const { key } = prop;
+                objectParams.push(`\${${ii}:${key.name}}`)
+                plainObjectParams.push(`${key.name}`)
+              })
+              propParams.push(objectParams.join(', '));
+              plainPropParams.push(plainObjectParams.join(', '));
+              propParams.push(' }');
+              plainPropParams.push(' }');
+              params.push(propParams.join(''));
+              plainParams.push(plainPropParams.join(''));
+            } else if (param.type === 'AssignmentPattern') {
+              if (param.left && param.left.type === 'Identifier') {
+                params.push(`\${${ii}:${param.left.name}}`);
+                plainParams.push(`${param.left.name}?`);
+              }
+          }
+            return param;
+          })
+          snippetString.push(params.join(', '))
+
+        }
+
+        snippetString.push(`)\${${++ii}}`)
       }
 
-      snippetString.push(`)\${${++ii}}`)
 
       const commentBlocks = node.comments || [];
 
@@ -75,11 +81,11 @@ export function build(item: {key:String,items:Object}, domain:String, context:Ex
         disposableList.push(vscode.languages.registerCompletionItemProvider(
           'javascript',
           {
-            provideCompletionItems() {
-                return [new SnippetCompletionItem(`${domain}.${key}.${prop}`, snippetString.join(''))];
+            provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext) {
+                return [new ProvideCompletionItem(`${domain}.${key}.${prop}`, snippetString.join(''), `${plainPrefixMethod}${prop}( ${plainParams.join(', ')} )`, comments.join("\n"), document, position, token, context)];
             },
-            resolveCompletionItem() {
-              return new ResolveCompletionItem(`${domain}.${key}.${prop}`, snippetString.join(''), `${plainPrefixMethod}${prop}( ${plainParams.join(', ')} )`, comments.join("\n"), )
+            resolveCompletionItem(item: CompletionItem, token: CancellationToken) {
+              return item;
             },
           },
           '.')
@@ -91,10 +97,13 @@ export function build(item: {key:String,items:Object}, domain:String, context:Ex
   return disposableList;
 }
 
-export function isAsyncReturn(node) {
+export function isAsyncReturn(node, domain) {
   const { comments, value } = node;
   const { body } = value.body;
 
+  if (domain === 'controller') {
+    return false;
+  }
   if (value.async) return true;
   if (comments) {
      const commentInfo= comments.map(comment => comment.value.replace(/\*/g, ""))
@@ -105,9 +114,13 @@ export function isAsyncReturn(node) {
   return false;
 }
 
-export function  isPromiseReturn (node) {
+export function  isPromiseReturn (node, domain) {
   const { comments, value } = node;
   const { body } = value.body;
+
+  if (domain === 'controller') {
+    return false;
+  }
 
   if (value.generator) return true;
   if (comments) {
@@ -133,10 +146,10 @@ export function  isPromiseReturn (node) {
 
 export class ResolveCompletionItem extends CompletionItem {
   constructor(label: string, snippet:string,  method: string, detail: string, locals?: object) {
-    super(label, CompletionItemKind.Snippet);
+    super(label, CompletionItemKind.Method);
     const markdownString = new MarkdownString(`${detail}\n\n **${method}**\n\n`);
     this.documentation = markdownString;
-    this.detail = 'Object';
-    this.insertText = new SnippetString(snippet, locals)
+    this.detail = '详细接口说明';
+    this.insertText = new SnippetString(snippet, locals);
   }
 }

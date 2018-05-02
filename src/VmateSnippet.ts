@@ -5,7 +5,7 @@ import * as path from 'path';
 import { fs } from 'mz';
 import { stripIndent } from 'common-tags';
 import { getFrameworkOrEggPath } from 'egg-utils';
-import { CompletionItem, CompletionItemKind, ExtensionContext, workspace, Uri } from 'vscode';
+import { CompletionItem, CompletionItemKind, ExtensionContext, workspace, Uri, CompletionItemProvider, TextDocument, CompletionContext, Position, CancellationToken, MarkdownString} from 'vscode';
 import { FileCache } from './FileUtils';
 import * as moment from 'moment';
 
@@ -49,10 +49,10 @@ export async function init(context: ExtensionContext) {
 
   // register snippet
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider([ 'javascript' ], {
-    provideCompletionItems() {
-      return Object.keys(snippets).map(key => new SnippetCompletionItem(`vmate ${key}`, stripIndent`${snippets[key]}` + '\n'));
+    provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext) {
+      return Object.keys(snippets).map(key => new ProvideCompletionItem(`vmate ${key}`, stripIndent`${snippets[key]}` + '\n', `${shortSnippets[key]}`, '', document, position, token, context));
     },
-    resolveCompletionItem(item: CompletionItem, token: vscode.CancellationToken): vscode.CompletionItem {
+    resolveCompletionItem(item: CompletionItem, token: CancellationToken): CompletionItem {
       //FIXME: hacky, replace fn style
       const snippet = item.insertText as SnippetString;
       snippet.value = snippet.value.replace(/\$\{TM_STYLE_FN}/g, config.fnStyle || '${1|*,async|}');
@@ -63,16 +63,20 @@ export async function init(context: ExtensionContext) {
     }
   }));
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider(['javascript'], {
-    provideCompletionItems() {
-      return Object.keys(shortSnippets).map(key => new SnippetCompletionItem(`app.${key}`, stripIndent`${shortSnippets[key]};`));
+    provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext) {
+      return Object.keys(shortSnippets).map(key => new ProvideCompletionItem(`app.${key}`, stripIndent`${shortSnippets[key]};`, `${shortSnippets[key]}`, '', document, position, token, context));
     }
   }))
 }
 
-export class SnippetCompletionItem extends CompletionItem {
-  constructor(label: string, snippet: string, locals?: object) {
-    super(label, CompletionItemKind.Snippet);
+export class ProvideCompletionItem extends CompletionItem {
+  constructor(label: string, snippet: string, method: string, detail: string, document?: TextDocument, position?: vscode.Position, token?: vscode.CancellationToken, context?: CompletionContext, locals?: object) {
+    super(label, CompletionItemKind.Method);
     this.insertText = new SnippetString(snippet, locals);
+    const markdownString = new MarkdownString(`${detail}\n\n **${method}**\n\n`);
+    this.documentation = markdownString;
+    this.detail = '详细接口说明';
+    this.range = document.getWordRangeAtPosition(position);
   }
 }
 export class SnippetString extends vscode.SnippetString {

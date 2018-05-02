@@ -5,7 +5,7 @@ import * as ast from 'egg-ast-utils';
 import { StatusBarView } from '../views/view';
 
 import { ExtensionContext, workspace, Uri, WorkspaceFolder, GlobPattern } from 'vscode';
-import { SnippetCompletionItem } from '../VmateSnippet';
+import { ProvideCompletionItem } from '../VmateSnippet';
 import { build } from "./SnippetBuild";
 
 export async function init(context: ExtensionContext, pattern:GlobPattern, domain:String) {
@@ -47,6 +47,7 @@ export async function init(context: ExtensionContext, pattern:GlobPattern, domai
           completionItemList.set(key, build({ key, items }, domain, context));
         }
         statusBarView.setCompleted(`Re-Indexed ${domain}/${key} info` )
+        vscode.window.showInformationMessage(`${domain}/${key} is updated`);
       }
     }
   );
@@ -61,7 +62,7 @@ export async function init(context: ExtensionContext, pattern:GlobPattern, domai
   const regex = new RegExp(`(app\/${domain}\/)(.*)\.js`);
   for (const { content, uri } of files) {
     const matcher = uri.toString().match(regex);
-    if (matcher.length && content ) {
+    if (matcher && matcher.length && content ) {
       let key = matcher[2]
       if (key.indexOf('/')>-1) {
         key = key.replace('/', '.');
