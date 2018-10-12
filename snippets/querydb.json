@@ -1,32 +1,32 @@
 {
   "select sql": {
     "prefix": "mysql select",
-    "body": "yield app.mysql.${1|select,query|}.table(${2:table})\n  .condition(${3:condition})",
+    "body": "yield app.${1|mysql,websiteMysql|}.${2|select,query|}.table(${3:table})\n  .condition(${4:condition})",
     "description": "操作查询数据"
   },
   "query sql": {
     "prefix": "mysql query",
-    "body": "yield app.mysql.${1|query,select|}.table(${2:table})\n  .condition(${3:condition})",
+    "body": "yield app.${1|mysql,websiteMysql|}.${2|query,select|}.table(${3:table})\n  .condition(${4:condition})",
     "description": "操作查询数据"
   },
   "create sql": {
     "prefix": "mysql create",
-    "body": "yield app.mysql.${1|create,insert|}.table(${2:table})\n  .insert(${3:data});",
+    "body": "yield app.${1|mysql,websiteMysql|}.${2|create,insert|}.table(${3:table})\n  .insert(${4:data});",
     "description": "操作添加/插入数据"
   },
   "insert sql": {
     "prefix": "mysql insert",
-    "body": "yield app.mysql.${1|insert,create|}.table(${2:table})\n  .insert(${3:data});",
+    "body": "yield app.${1|mysql,websiteMysql|}.${2|insert,create|}.table(${3:table})\n  .insert(${4:data});",
     "description": "操作添加/插入数据"
   },
   "delete sql": {
     "prefix": "mysql del",
-    "body": "yield app.mysql.${1|del,delete|}.table(${2:table})\n  .condition(${3:condition})\n  .${1}();",
+    "body": "yield app.${1|mysql,websiteMysql|}.${2|del,delete|}.table(${3:table})\n  .condition(${4:condition})\n  .${1}();",
     "description": "操作删除数据"
   },
   "update sql": {
     "prefix": "mysql update",
-    "body": "yield app.mysql.update.table(${1:table})\n  .condition(${2:condition})\n  .update(${3:data});",
+    "body": "yield app.${1|mysql,websiteMysql|}.update.table(${2:table})\n  .condition(${3:condition})\n  .update(${4:data});",
     "description": "操作更新数据库"
   }
 }

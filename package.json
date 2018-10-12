@@ -2,7 +2,7 @@
     "name": "vmate",
     "displayName": "vmate",
     "description": "vscode extension for vmate",
-    "version": "0.7.0",
+    "version": "0.9.0",
     "publisher": "jeffincn",
     "homepage": "https://github.com/jeffincn/vscode-vmate",
     "repository": {
@@ -10,7 +10,7 @@
         "url": "git@github.com:jeffincn/vscode-vmate.git"
     },
     "engines": {
-        "vscode": "^1.17.0"
+        "vscode": "^1.22.0"
     },
     "icon": "resources/vmate.png",
     "categories": [
@@ -78,7 +78,7 @@
         ]
     },
     "scripts": {
-        "vspub": "vsce publish",
+        "vspub": "vsce publish minor",
         "vscode:prepublish": "tsc -p ./",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
