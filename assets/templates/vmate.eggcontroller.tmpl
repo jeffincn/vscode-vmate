@@ -25,7 +25,7 @@ module.exports = app => {
      * 获取记录
      * @param {*} ctx
      */
-    * ${3:index} (ctx) {
+    async ${3:index} (ctx) {
       const service = this.service.${TM_ENTITY};
       const { query, response } = ctx;
 
@@ -36,7 +36,7 @@ module.exports = app => {
       };
 
       try {
-        const record = yield service.getList(query);
+        const record = await service.getList(query);
 
         response.success = record.map(item => {
           return item.valueOf();

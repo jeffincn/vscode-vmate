@@ -13,8 +13,8 @@ export function build(item: {key:String,items:Object}, domain:String, context:Ex
       const snippetString = [];
       let plainPrefixMethod = ' ';
       if (isAsyncReturn(node, domain)) {
-        snippetString.push('async ');
-        plainPrefixMethod = '`async` ';
+        snippetString.push('await ');
+        plainPrefixMethod = '`await` ';
       } else if (isPromiseReturn(node, domain)) {
         snippetString.push('yield ');
         plainPrefixMethod = '`yield` ';

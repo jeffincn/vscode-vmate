@@ -17,24 +17,23 @@ module.exports = app => {
      * 获取记录
      * @returns {Array<Entity>}
      */
-    *getList (query) {
+    async getList (query) {
 
       let { page, limit, sort, order, condition  } = query;
       let list = [];
       page || (page = 1);
-      pageSize || (pageSize = 30);
       limit || (limit = 30);
       sort || (sort = 'desc');
       order || (order = ${TM_FILE_CLASS}Entity.uniqkey);
 
-      const offset = (parseInt(page, 10) - 1) * parseInt(pageSize, 10);
+      const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
       try {
 
-        const result = yield app.mysql.query.table(table)
+        const result = await app.mysql.query.table(table)
           .condition(condition)
           .select(columns)
-          .limit(pageSize)
+          .limit(limit)
           .offset(offset)
           .orderBy(order, sort);
 
@@ -54,11 +53,30 @@ module.exports = app => {
     }
 
     /**
+     * 获取记录条数
+     */
+    async getCount (query) {
+      const { condition } = query;
+      try {
+        const result = await app.mysql.query.table(table)
+          .condition(condition)
+          .count(`${OperationItemEntity.uniqkey} as total`);
+        if (result.length) {
+          return result.shift().total;
+        } else {
+          return 0;
+        }
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    /**
      * 根据Item的Id获取记录
-     * @param {number} id 
+     * @param {number} id
      * @returns {${TM_FILE_CLASS}Entity}
      */
-    *getItem (id) {
+    async getItem (id) {
 
       const condition = {
         [table]: {
@@ -66,7 +84,7 @@ module.exports = app => {
         }
       };
 
-      const result = yield app.mysql.query.table(table)
+      const result = await app.mysql.query.table(table)
         .condition(condition)
         .first(columns);
 
@@ -82,10 +100,10 @@ module.exports = app => {
 
     /**
      * 创建一条Item的记录
-     * @param {${TM_FILE_CLASS}Entity} entity 
+     * @param {${TM_FILE_CLASS}Entity} entity
      * @returns {${TM_FILE_CLASS}Entity}
      */
-    *createItem (entity) {
+    async createItem (entity) {
       try {
         if (entity instanceof ${TM_FILE_CLASS}Entity) {
           // 避免由于多传入一个主键id键值而导致系统无法插入成功，因此需要
@@ -96,7 +114,7 @@ module.exports = app => {
             delete entity.valueOf()[key];
           }
           const connection = app.mysql.insert.table(table);
-          const result = yield connection
+          const result = await connection
             .returning(${TM_FILE_CLASS}Entity.uniqKey)
             .insert(entity.valueOf());
           [ entity.id ] = result;
@@ -114,13 +132,13 @@ module.exports = app => {
 
     /**
      * 删除一条Item的记录
-     * @param {number} id 
+     * @param {number} id
      * @returns {${TM_FILE_CLASS}Entity}
      */
-    *removeItem (id) {
+    async removeItem (id) {
       const key = ${TM_FILE_CLASS}Entity.uniqkey;
       const connection = app.mysql.delete.table(table);
-      const result = yield connection
+      const result = await connection
         .where(`${ key }`, id)
         .del();
       return result === 1;
@@ -132,10 +150,10 @@ module.exports = app => {
     /**
      * 更新一条Item的记录
      * @param {${TM_FILE_CLASS}Entity} entity
-     * @param {number} id 
+     * @param {number} id
      * @returns {${TM_FILE_CLASS}Entity}
      */
-    *updateItem (entity, id) {
+    async updateItem (entity, id) {
       try {
         if (entity instanceof ${TM_FILE_CLASS}Entity) {
           // 避免由于多传入一个主键id键值而导致系统更新时候将错误更新了令一条数据，
@@ -151,7 +169,7 @@ module.exports = app => {
             }
           };
           const connection = app.mysql.update.table(table);
-          const result = yield connection
+          const result = await connection
             .condition(condition)
             .where(`${ key }`, id)
             .update(entity.valueOf());
